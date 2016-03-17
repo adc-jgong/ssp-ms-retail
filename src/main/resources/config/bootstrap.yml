@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: retail
+  cloud:
+    config:
+      uri: ${config.server.uri:http://${HOST:dev-mesos-node-001.adc.bid}:8888}
+      label: develop
+encrypt:
+  failOnError: true

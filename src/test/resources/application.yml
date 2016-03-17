@@ -1,0 +1,17 @@
+management.security.enabled: false
+security.basic.enabled: false
+
+spring:
+    cloud:
+        discovery:
+            enabled: false
+    jpa:
+        hibernate:
+            ddl-auto: validate
+            show_sql: true
+
+flyway:
+ locations: classpath:db/migration
+
+server:
+   port: 0

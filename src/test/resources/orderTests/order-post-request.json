@@ -1,0 +1,10 @@
+{
+  "first_name":"test_first",
+  "last_name":"test_last",
+  "email":"xyz@ten-x.com",
+  "phone":"9397891234",
+  "products":[{ 
+  "product_id":2,   
+  "quantity":10}],
+  "status":"ORDERED"
+}
