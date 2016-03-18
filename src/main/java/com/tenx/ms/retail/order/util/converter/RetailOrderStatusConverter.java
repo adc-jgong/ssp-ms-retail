@@ -1,9 +1,9 @@
-package com.tenx.ms.retail.converter;
+package com.tenx.ms.retail.order.util.converter;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
-import com.tenx.ms.retail.enums.RetailOrderStatus;
+import com.tenx.ms.retail.order.util.enums.RetailOrderStatus;
 
 @Converter(autoApply=true)
 public class RetailOrderStatusConverter implements AttributeConverter<RetailOrderStatus, Integer>{

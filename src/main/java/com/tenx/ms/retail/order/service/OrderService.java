@@ -9,13 +9,13 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.tenx.ms.retail.enums.RetailOrderStatus;
 import com.tenx.ms.retail.order.domain.CustomerOrderEntity;
 import com.tenx.ms.retail.order.domain.OrderItemEntity;
 import com.tenx.ms.retail.order.repository.OrderItemRepository;
 import com.tenx.ms.retail.order.repository.OrderRepository;
 import com.tenx.ms.retail.order.rest.dto.OrderDTO;
 import com.tenx.ms.retail.order.rest.dto.OrderProductDTO;
+import com.tenx.ms.retail.order.util.enums.RetailOrderStatus;
 import com.tenx.ms.retail.products.domain.ProductEntity;
 import com.tenx.ms.retail.stock.domain.StockEntity;
 import com.tenx.ms.retail.stock.repository.StockRepository;
@@ -56,8 +56,8 @@ public class OrderService {
 		ProductEntity product = new ProductEntity();
 		product.setProductId(productDto.getProductId());
 		StockEntity stock = retailStockRepository.findByStoreAndProduct(store, product).get();
-//		if (stock.getProductCnt() < productDto.getCount()) throw new ValidationException("not enough for the product count");
-		stock.setProductCnt(stock.getProductCnt()-productDto.getQuantity());
+		Integer stockNumber = stock.getProductCnt();		
+		stock.setProductCnt(stockNumber-productDto.getQuantity());
 		item.setStock(stock);
 		return item;
 	}
@@ -74,6 +74,4 @@ public class OrderService {
 		order.setOrderDate(new Date());		
 		return order;
 	}
-	
-	
 }

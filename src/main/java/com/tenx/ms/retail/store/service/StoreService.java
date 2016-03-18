@@ -4,15 +4,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.transaction.Transactional;
 import javax.validation.ValidationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tenx.ms.commons.rest.dto.Paginated;
+import com.tenx.ms.retail.exception.RetailDeleteConstraintException;
+import com.tenx.ms.retail.order.domain.OrderItemEntity;
+import com.tenx.ms.retail.order.repository.OrderItemRepository;
+import com.tenx.ms.retail.stock.domain.StockEntity;
+import com.tenx.ms.retail.stock.repository.StockRepository;
 import com.tenx.ms.retail.store.domain.StoreEntity;
 import com.tenx.ms.retail.store.repository.StoreRepository;
 import com.tenx.ms.retail.store.rest.dto.StoreDTO;
@@ -21,6 +26,12 @@ import com.tenx.ms.retail.store.rest.dto.StoreDTO;
 public class StoreService {
 	@Autowired
 	private StoreRepository retailStoreRepository;
+	
+	@Autowired
+	private OrderItemRepository orderItemRepository;
+	
+	@Autowired
+	private StockRepository stockRepository;
 	
 	public Paginated<StoreDTO> getAllStores(Pageable pageable, String baseLinkPath) throws ValidationException {
 	    Page<StoreEntity> curPage = retailStoreRepository.findAll(pageable);
@@ -44,6 +55,18 @@ public class StoreService {
 		StoreEntity entity = retailStoreRepository.saveAndFlush(convertToEntity(storeDto));		
 		return entity.getStoreId();
     }
+	
+	@Transactional
+	public void deleteStore(Long storeId) throws RetailDeleteConstraintException{		
+		List<OrderItemEntity> itemList = orderItemRepository.findItemByStoreId(storeId);
+		if (itemList.isEmpty()) {
+			throw new RetailDeleteConstraintException("Store "+storeId+" can not be deleted, since Order exists");
+		}
+		Optional<StoreEntity> store = retailStoreRepository.findStoresByStoreId(storeId);
+		Page<StockEntity> stockList = stockRepository.findByStore(store.get(), null);
+		stockRepository.delete(stockList);
+		retailStoreRepository.delete(storeId);
+	}
     
 	private StoreDTO convertToDTO(StoreEntity storeEntity) {
         StoreDTO storeDTO = new StoreDTO();

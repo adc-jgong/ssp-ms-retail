@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tenx.ms.commons.rest.dto.Paginated;
+import com.tenx.ms.retail.exception.RetailDeleteConstraintException;
+import com.tenx.ms.retail.order.domain.OrderItemEntity;
+import com.tenx.ms.retail.order.repository.OrderItemRepository;
 import com.tenx.ms.retail.products.domain.ProductEntity;
 import com.tenx.ms.retail.products.repository.ProductRepository;
 import com.tenx.ms.retail.products.rest.dto.ProductDTO;
@@ -33,20 +36,54 @@ public class ProductService {
 	@Autowired 
 	private StoreRepository retailStoreRepository;
 	
+	@Autowired 
+	private OrderItemRepository orderItemRepository;
+	
 	@Transactional
 	public Long createProduct(ProductDTO dto) {
-		LOGGER.debug("save product with storeId {} and productName {}", dto.getStoreId(), dto.getProductName());		
-		ProductEntity productEntity = retailProductRepository.save(convertToEntity(dto));
+		LOGGER.debug("save product with storeId {} and productName {}", dto.getStoreId(), dto.getProductName());
+		StoreEntity storeEntity = null;
 		if (dto.getStoreId() != null) {
-			Optional<StoreEntity> storeEntity = retailStoreRepository.findStoresByStoreId(dto.getStoreId());
+			Optional<StoreEntity> optional = retailStoreRepository.findStoresByStoreId(dto.getStoreId());
+			storeEntity = optional.get();
+		}
+		ProductEntity productEntity = retailProductRepository.save(convertToEntity(dto));
+		if (dto.getStoreId() != null) {			
 			StockEntity stockEntity = new StockEntity();
-			stockEntity.setStore(storeEntity.get());
+			stockEntity.setStore(storeEntity);
 			stockEntity.setProduct(productEntity);
 			int cnt = dto.getQuantity() == null ? null : dto.getQuantity();
 			stockEntity.setProductCnt(cnt);
 			retailStockRepository.save(stockEntity);
 		}
 		return productEntity.getProductId();
+	}
+	
+	public void deleteProduct(Long productId) throws RetailDeleteConstraintException {
+		List<OrderItemEntity> orderItems = orderItemRepository.findItemByProductId(productId);
+		if (orderItems.isEmpty()) {
+			throw new RetailDeleteConstraintException("order exists, can not delete product with id" + productId);
+		}
+		ProductEntity product = retailProductRepository.findOne(productId);
+		Page<StockEntity> stockList = retailStockRepository.findByProduct(product, null);
+		retailStockRepository.delete(stockList);
+		retailProductRepository.delete(product);
+	}
+	
+	public void deleteProduct(Long storeId, Long productId) throws RetailDeleteConstraintException {
+		StoreEntity store = new StoreEntity();
+		store.setStoreId(storeId);
+		ProductEntity product = new ProductEntity();
+		product.setProductId(productId);
+		
+		Optional<StockEntity> stockOptional = retailStockRepository.findByStoreAndProduct(store, product);
+		if (stockOptional.isPresent()) {
+			List<OrderItemEntity> orderItems = orderItemRepository.findItemByStock(stockOptional.get());
+			if (orderItems.isEmpty()) {
+				throw new RetailDeleteConstraintException("order exists, can not delete product with id" + productId);
+			}
+			retailStockRepository.delete(stockOptional.get());			
+		}
 	}
 	
 	public Paginated<ProductDTO> getProductList(Long storeId, Pageable pageable, String basePath) {
@@ -70,7 +107,7 @@ public class ProductService {
 		dto.setStoreId(storeId);
 		return dto;				
 	}
-	
+		
 	private ProductEntity convertToEntity(ProductDTO dto) {
 		ProductEntity entity = new ProductEntity();		
 		entity.setPrice(dto.getPrice());

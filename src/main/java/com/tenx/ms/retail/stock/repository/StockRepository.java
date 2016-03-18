@@ -14,5 +14,6 @@ import com.tenx.ms.retail.store.domain.StoreEntity;
 @Repository
 public interface StockRepository extends JpaRepository<StockEntity, Long>{
 	Page<StockEntity> findByStore(StoreEntity store, Pageable pageable);
+	Page<StockEntity> findByProduct(ProductEntity product, Pageable pageable);
 	Optional<StockEntity> findByStoreAndProduct(StoreEntity store, ProductEntity product);
 }

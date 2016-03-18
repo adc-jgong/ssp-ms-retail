@@ -17,8 +17,8 @@ import javax.validation.constraints.Size;
 import org.hibernate.validator.constraints.Email;
 
 import com.tenx.ms.commons.validation.constraints.PhoneNumber;
-import com.tenx.ms.retail.converter.RetailOrderStatusConverter;
-import com.tenx.ms.retail.enums.RetailOrderStatus;
+import com.tenx.ms.retail.order.util.converter.RetailOrderStatusConverter;
+import com.tenx.ms.retail.order.util.enums.RetailOrderStatus;
 
 @Entity
 @Table(name="customer_order")

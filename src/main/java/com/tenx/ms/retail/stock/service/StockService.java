@@ -41,7 +41,7 @@ public class StockService {
 			stockEntity.setStore(store);
 		}
 		stockEntity.setProductCnt(newCount);
-		retailStockRepository.save(stock.get());
+		retailStockRepository.save(stockEntity);
 		return newCount;
 	}
 }
